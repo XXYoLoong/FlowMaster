@@ -77,8 +77,10 @@ def create_app():
     
     return app
 
+# 创建应用实例（供gunicorn使用）
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     app.run(
         host=app.config['HOST'],
         port=app.config['PORT'],
