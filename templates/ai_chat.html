@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FlowMaster AI - AI对话模式</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ai_chat.css') }}">
+</head>
+<body>
+    <div class="ai-chat-container">
+        <!-- 顶部导航栏 -->
+        <header class="ai-header">
+            <div class="ai-header-content">
+                <button class="btn btn-primary btn-sm" id="switchToMain">原版界面</button>
+                <h1 class="ai-logo">FlowMaster AI 对话</h1>
+                <div class="ai-header-actions">
+                    <span class="user-info" id="aiUserInfo">未登录</span>
+                    <button class="btn btn-secondary btn-sm" id="aiLogoutBtn" style="display:none;">退出</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 登录界面 -->
+        <div id="aiLoginSection" class="ai-section">
+            <div class="ai-login-container">
+                <div id="aiLoginFormContainer">
+                    <h2>登录</h2>
+                    <form id="aiLoginForm">
+                        <div class="form-group">
+                            <label>用户名</label>
+                            <input type="text" id="aiUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label>密码</label>
+                            <input type="password" id="aiPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">登录</button>
+                        <button type="button" class="btn btn-secondary btn-block" id="aiShowRegisterBtn" style="margin-top: 0.5rem;">注册新账号</button>
+                    </form>
+                </div>
+                
+                <div id="aiRegisterFormContainer" style="display: none;">
+                    <h2>注册普通工人账号</h2>
+                    <form id="aiRegisterForm">
+                        <div class="form-group">
+                            <label>用户名（3-20个字符，只能包含字母、数字、下划线和连字符）</label>
+                            <input type="text" id="aiRegUsername" required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_-]+">
+                        </div>
+                        <div class="form-group">
+                            <label>密码（至少6个字符）</label>
+                            <input type="password" id="aiRegPassword" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label>真实姓名（2-50个字符）</label>
+                            <input type="text" id="aiRegRealName" required minlength="2" maxlength="50">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">注册</button>
+                        <button type="button" class="btn btn-secondary btn-block" id="aiShowLoginBtn" style="margin-top: 0.5rem;">返回登录</button>
+                    </form>
+                    <div class="login-hint">
+                        <p style="color: #10B981; margin-top: 0.5rem;">✅ 注册后将创建普通工人账号，只能查看和录入自己的流水数据</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI对话界面 -->
+        <div id="aiChatSection" class="ai-section" style="display:none;">
+            <!-- 快捷操作按钮 -->
+            <div class="quick-actions">
+                <button class="quick-action-btn" data-action="录入今天的流水：张三，数量6，总金额560，金额明细：微信80, 微信100, 支付宝100, 支付宝100, 微信80">
+                    录入流水
+                </button>
+                <button class="quick-action-btn" data-action="查询今天的流水数据">
+                    今日流水
+                </button>
+                <button class="quick-action-btn" data-action="显示今天的日报" id="quickDailyReport">
+                    今日报表
+                </button>
+                <button class="quick-action-btn" data-action="显示本周的周报" id="quickWeeklyReport" style="display:none;">
+                    本周报表
+                </button>
+                <button class="quick-action-btn" data-action="显示本月的月报" id="quickMonthlyReport" style="display:none;">
+                    本月报表
+                </button>
+                <button class="quick-action-btn" data-action="显示管理层综合报表" id="quickManagementReport" style="display:none;">
+                    管理层报表
+                </button>
+            </div>
+
+            <!-- 对话消息区域 -->
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-message">
+                    <div class="welcome-icon">🤖</div>
+                    <h3>欢迎使用 FlowMaster AI</h3>
+                    <p>我是您的智能助手，可以帮助您：</p>
+                    <ul>
+                        <li>录入流水数据</li>
+                        <li>查询流水记录</li>
+                        <li>生成各类报表</li>
+                        <li>查看员工信息</li>
+                    </ul>
+                    <p>请直接告诉我您的需求，例如：</p>
+                    <ul>
+                        <li>"录入今天的流水：张三，数量6，总金额560"</li>
+                        <li>"查询今天的流水数据"</li>
+                        <li>"显示今天的日报"</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                    <textarea id="chatInput" placeholder="输入您的需求..." rows="1"></textarea>
+                    <button class="btn-send" id="sendBtn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/ai_chat.js') }}"></script>
+</body>
+</html>
+

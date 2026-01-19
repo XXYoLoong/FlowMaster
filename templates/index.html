@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FlowMaster AI - 每日流水统计与管理系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航栏 -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">FlowMaster AI</h1>
+                <div class="header-actions">
+                    <span class="user-info" id="userInfo">未登录</span>
+                    <button class="btn btn-secondary" id="logoutBtn" style="display:none;">退出</button>
+                    <button class="btn btn-primary" id="switchToAI" title="切换到AI对话界面">
+                        <span>🤖</span> AI对话
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 登录界面 -->
+        <div id="loginSection" class="section">
+            <div class="login-container">
+                <div id="loginFormContainer">
+                    <h2>登录</h2>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label>用户名</label>
+                            <input type="text" id="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label>密码</label>
+                            <input type="password" id="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">登录</button>
+                        <button type="button" class="btn btn-secondary btn-block" id="showRegisterBtn" style="margin-top: 0.5rem;">注册新账号</button>
+                    </form>
+                </div>
+                
+                <div id="registerFormContainer" style="display: none;">
+                    <h2>注册普通工人账号</h2>
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <label>用户名（3-20个字符，只能包含字母、数字、下划线和连字符）</label>
+                            <input type="text" id="regUsername" required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_-]+">
+                        </div>
+                        <div class="form-group">
+                            <label>密码（至少6个字符）</label>
+                            <input type="password" id="regPassword" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label>真实姓名（2-50个字符）</label>
+                            <input type="text" id="regRealName" required minlength="2" maxlength="50">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">注册</button>
+                        <button type="button" class="btn btn-secondary btn-block" id="showLoginBtn" style="margin-top: 0.5rem;">返回登录</button>
+                    </form>
+                    <div class="login-hint">
+                        <p style="color: #10B981; margin-top: 0.5rem;">✅ 注册后将创建普通工人账号，只能查看和录入自己的流水数据</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主界面 -->
+        <div id="mainSection" class="section" style="display:none;">
+            <!-- 标签页导航 -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="input">数据录入</button>
+                <button class="tab-btn" data-tab="list">流水列表</button>
+                <button class="tab-btn" data-tab="reports">报表统计</button>
+                <button class="tab-btn" data-tab="employees" id="employeesTab" style="display:none;">员工管理</button>
+                <button class="tab-btn" data-tab="profile">个人主页</button>
+            </div>
+
+            <!-- 数据录入标签页 -->
+            <div id="inputTab" class="tab-content active">
+                <div class="card">
+                    <div class="card-header-with-icon">
+                        <div>
+                            <h2>录入流水数据</h2>
+                            <p class="card-subtitle" id="inputCardSubtitle">为员工录入每日流水记录</p>
+                        </div>
+                        <div class="card-icon">📝</div>
+                    </div>
+                    <form id="transactionForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>
+                                    <span class="label-icon">📅</span>
+                                    日期
+                                    <span class="label-hint" id="dateHint">（可选择任意日期）</span>
+                                </label>
+                                <input type="date" id="transactionDate" required>
+                            </div>
+                            <div class="form-group" id="employeeFormGroup">
+                                <label>
+                                    <span class="label-icon">👤</span>
+                                    员工
+                                    <span class="label-hint" id="employeeHint">（可选择任意员工）</span>
+                                </label>
+                                <select id="transactionEmployee" required></select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>
+                                    <span class="label-icon">🔢</span>
+                                    数量
+                                </label>
+                                <input type="number" id="transactionQuantity" min="1" required placeholder="请输入数量">
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <span class="label-icon">💰</span>
+                                    总金额（元）
+                                </label>
+                                <input type="number" id="transactionAmount" step="0.01" min="0" required placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <span class="label-icon">📋</span>
+                                金额明细（备注）
+                                <span class="label-hint">例如：微信80, 微信100, 支付宝100, 支付宝100, 微信80</span>
+                            </label>
+                            <textarea id="transactionDetails" rows="3" placeholder="请输入金额明细，用逗号分隔..."></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary btn-block btn-lg">
+                                <span class="btn-icon">✓</span>
+                                提交录入
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- 快捷录入提示（仅店长和前台员工） -->
+                <div class="card info-card" id="quickInputHint" style="display: none;">
+                    <div class="info-card-content">
+                        <div class="info-icon">💡</div>
+                        <div>
+                            <h3>快捷录入提示</h3>
+                            <p>作为<span id="roleHintText">店长/前台员工</span>，您可以为任意员工录入任意日期的流水数据。数据将实时同步到对应员工的账户中。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 流水列表标签页 -->
+            <div id="listTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>流水列表</h2>
+                        <div class="filter-group">
+                            <input type="date" id="filterStartDate" class="filter-input">
+                            <span>至</span>
+                            <input type="date" id="filterEndDate" class="filter-input">
+                            <select id="filterEmployee" class="filter-input">
+                                <option value="">全部员工</option>
+                            </select>
+                            <button class="btn btn-secondary" id="filterBtn">筛选</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>日期</th>
+                                    <th>员工</th>
+                                    <th>数量</th>
+                                    <th>总金额</th>
+                                    <th>金额明细</th>
+                                    <th id="actionHeader" style="display:none;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionList">
+                                <tr><td colspan="6" class="empty-state">暂无数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="pagination"></div>
+                </div>
+            </div>
+
+            <!-- 报表统计标签页 -->
+            <div id="reportsTab" class="tab-content">
+                <div class="card">
+                    <h2>报表统计</h2>
+                    <div class="report-tabs">
+                        <button class="report-tab-btn active" data-report="daily">每日小结</button>
+                        <button class="report-tab-btn" data-report="weekly" id="weeklyReportBtn" style="display:none;">每周小结</button>
+                        <button class="report-tab-btn" data-report="monthly" id="monthlyReportBtn" style="display:none;">每月小结</button>
+                        <button class="report-tab-btn" data-report="yearly" id="yearlyReportBtn" style="display:none;">年报</button>
+                        <button class="report-tab-btn" data-report="management" id="managementReportBtn" style="display:none;">管理层报表</button>
+                    </div>
+
+                    <!-- 每日小结 -->
+                    <div id="dailyReport" class="report-content active">
+                        <div class="form-group">
+                            <label>选择日期</label>
+                            <input type="date" id="dailyReportDate">
+                            <button class="btn btn-primary" id="loadDailyReport">查询</button>
+                        </div>
+                        <div id="dailyReportContent"></div>
+                    </div>
+
+                    <!-- 每周小结 -->
+                    <div id="weeklyReport" class="report-content">
+                        <div class="form-group">
+                            <label>选择年份</label>
+                            <input type="number" id="weeklyReportYear" min="2020" max="2100">
+                            <label>选择周次</label>
+                            <input type="number" id="weeklyReportWeek" min="1" max="53">
+                            <button class="btn btn-primary" id="loadWeeklyReport">查询</button>
+                        </div>
+                        <div id="weeklyReportContent"></div>
+                    </div>
+
+                    <!-- 每月小结 -->
+                    <div id="monthlyReport" class="report-content">
+                        <div class="form-group">
+                            <label>选择年份</label>
+                            <input type="number" id="monthlyReportYear" min="2020" max="2100">
+                            <label>选择月份</label>
+                            <input type="number" id="monthlyReportMonth" min="1" max="12">
+                            <button class="btn btn-primary" id="loadMonthlyReport">查询</button>
+                        </div>
+                        <div id="monthlyReportContent"></div>
+                    </div>
+
+                    <!-- 年报 -->
+                    <div id="yearlyReport" class="report-content">
+                        <div class="form-group">
+                            <label>选择年份</label>
+                            <input type="number" id="yearlyReportYear" min="2020" max="2100">
+                            <button class="btn btn-primary" id="loadYearlyReport">查询</button>
+                        </div>
+                        <div id="yearlyReportContent"></div>
+                    </div>
+
+                    <!-- 管理层报表 -->
+                    <div id="managementReport" class="report-content">
+                        <div class="form-group">
+                            <label>开始日期</label>
+                            <input type="date" id="managementStartDate">
+                            <label>结束日期</label>
+                            <input type="date" id="managementEndDate">
+                            <button class="btn btn-primary" id="loadManagementReport">查询</button>
+                        </div>
+                        <div id="managementReportContent"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 员工管理标签页 -->
+            <div id="employeesTab" class="tab-content">
+                <div class="card">
+                    <h2>员工管理</h2>
+                    <button class="btn btn-primary" id="addEmployeeBtn">添加员工</button>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>用户名</th>
+                                    <th>真实姓名</th>
+                                    <th>角色</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employeeList">
+                                <tr><td colspan="5" class="empty-state">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 个人主页标签页 -->
+            <div id="profileTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header-with-icon">
+                        <div>
+                            <h2>个人主页</h2>
+                            <p class="card-subtitle">管理您的账户信息</p>
+                        </div>
+                        <div class="card-icon">👤</div>
+                    </div>
+                    
+                    <!-- 用户信息展示 -->
+                    <div class="profile-info">
+                        <div class="info-item">
+                            <label>用户名</label>
+                            <div class="info-value" id="profileUsername">-</div>
+                        </div>
+                        <div class="info-item">
+                            <label>真实姓名</label>
+                            <div class="info-value" id="profileRealName">-</div>
+                        </div>
+                        <div class="info-item">
+                            <label>角色</label>
+                            <div class="info-value" id="profileRole">-</div>
+                        </div>
+                        <div class="info-item">
+                            <label>账户状态</label>
+                            <div class="info-value" id="profileStatus">-</div>
+                        </div>
+                        <div class="info-item">
+                            <label>注册时间</label>
+                            <div class="info-value" id="profileCreatedAt">-</div>
+                        </div>
+                        <div class="info-item" id="passwordChangeInfo" style="display: none;">
+                            <label>上次修改密码</label>
+                            <div class="info-value" id="profilePasswordChangedAt">-</div>
+                        </div>
+                    </div>
+
+                    <!-- 修改密码表单 -->
+                    <div class="profile-section">
+                        <h3>修改密码</h3>
+                        <div class="password-change-hint" id="passwordChangeHint" style="display: none;">
+                            <p>⚠️ 每天只能修改一次密码</p>
+                            <p id="nextChangeTime" style="font-size: 0.85rem; color: var(--text-secondary);"></p>
+                        </div>
+                        <form id="changePasswordForm">
+                            <div class="form-group">
+                                <label>
+                                    <span class="label-icon">🔒</span>
+                                    原密码
+                                </label>
+                                <input type="password" id="oldPassword" required placeholder="请输入当前密码">
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <span class="label-icon">🔑</span>
+                                    新密码
+                                </label>
+                                <input type="password" id="newPassword" required minlength="6" placeholder="至少6个字符">
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <span class="label-icon">✓</span>
+                                    确认新密码
+                                </label>
+                                <input type="password" id="confirmPassword" required minlength="6" placeholder="请再次输入新密码">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary btn-block" id="changePasswordBtn">
+                                    <span class="btn-icon">🔐</span>
+                                    修改密码
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加员工模态框 -->
+    <div id="addEmployeeModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>添加员工</h2>
+            <form id="addEmployeeForm">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="newUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>真实姓名</label>
+                    <input type="text" id="newRealName" required>
+                </div>
+                <div class="form-group">
+                    <label>角色</label>
+                    <select id="newRole" required>
+                        <option value="staff">前台员工</option>
+                        <option value="manager">店长</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">创建</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+
